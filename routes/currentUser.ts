@@ -10,7 +10,7 @@ import * as security from '../lib/insecurity'
 
 export function retrieveLoggedInUser () {
   return (req: Request, res: Response) => {
-    let user
+    let user: any
     let response: any
     const emptyUser = { id: undefined, email: undefined, lastLoginIp: undefined, profileImage: undefined }
     try {
@@ -26,10 +26,12 @@ export function retrieveLoggedInUser () {
 
         if (requestedFields.length > 0) {
           // When fields are specified, return only those fields
-          for (const field of requestedFields) {
-            if (user?.data[field as keyof typeof user.data] !== undefined) {
-              baseUser[field] = user?.data[field as keyof typeof user.data]
-            }
+          const allowedFields = ['id', 'email', 'lastLoginIp', 'profileImage']
+          baseUser = {
+            ...baseUser,
+            ...Object.fromEntries(requestedFields
+              .filter(field => allowedFields.includes(field))
+              .map(field => [field, user?.data[field as keyof typeof user.data]]))
           }
         } else {
           // If no fields parameter, return standard fields (not password field)
